@@ -12,6 +12,7 @@
 #include <ql/experimental/exoticoptions/analytictwoassetbarrierengine.hpp>
 #include <ql/experimental/exoticoptions/analytictwoassetcorrelationengine.hpp>
 #include <ql/experimental/exoticoptions/analyticwriterextensibleoptionengine.hpp>
+#include <ql/experimental/exoticoptions/autocall.hpp>
 #include <ql/experimental/exoticoptions/complexchooseroption.hpp>
 #include <ql/experimental/exoticoptions/compoundoption.hpp>
 #include <ql/experimental/exoticoptions/continuousarithmeticasianlevyengine.hpp>
@@ -21,6 +22,7 @@
 #include <ql/experimental/exoticoptions/holderextensibleoption.hpp>
 #include <ql/experimental/exoticoptions/kirkspreadoptionengine.hpp>
 #include <ql/experimental/exoticoptions/margrabeoption.hpp>
+#include <ql/experimental/exoticoptions/mcautocallengine.hpp>
 #include <ql/experimental/exoticoptions/mceverestengine.hpp>
 #include <ql/experimental/exoticoptions/mchimalayaengine.hpp>
 #include <ql/experimental/exoticoptions/mcpagodaengine.hpp>

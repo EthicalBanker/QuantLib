@@ -15,6 +15,7 @@ this_include_HEADERS = \
     analytictwoassetbarrierengine.hpp \
     analytictwoassetcorrelationengine.hpp \
     analyticwriterextensibleoptionengine.hpp \
+    autocall.hpp \
     complexchooseroption.hpp \
     compoundoption.hpp \
     continuousarithmeticasianlevyengine.hpp \
@@ -24,6 +25,7 @@ this_include_HEADERS = \
     holderextensibleoption.hpp \
     kirkspreadoptionengine.hpp \
     margrabeoption.hpp \
+    mcautocallengine.hpp \
     mceverestengine.hpp \
     mchimalayaengine.hpp \
     mcpagodaengine.hpp \
@@ -47,6 +49,7 @@ libExoticOptions_la_SOURCES = \
     analytictwoassetbarrierengine.cpp \
     analytictwoassetcorrelationengine.cpp \
     analyticwriterextensibleoptionengine.cpp \
+    autocall.cpp \
     complexchooseroption.cpp \
     compoundoption.cpp \
     continuousarithmeticasianlevyengine.cpp \
@@ -56,6 +59,7 @@ libExoticOptions_la_SOURCES = \
     holderextensibleoption.cpp \
     kirkspreadoptionengine.cpp \
     margrabeoption.cpp \
+    mcautocallengine.cpp \
     mceverestengine.cpp \
     mchimalayaengine.cpp \
     mcpagodaengine.cpp \
