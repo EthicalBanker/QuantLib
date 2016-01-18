@@ -82,6 +82,8 @@ namespace QuantLib {
                                       weights_.end(),
                                       a.begin(), 0.0);
         }
+        const Array& getWeights() const { return weights_; }
+        
       private:
         Array weights_;
     };
