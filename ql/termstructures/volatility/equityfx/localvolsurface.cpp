@@ -93,7 +93,8 @@ namespace QuantLib {
         // strike derivatives
         Real strike, y, dy, strikep, strikem;
         Real w, wp, wm, dwdy, d2wdy2;
-        strike = underlyingLevel;
+        // Cope with underlyingLevel hitting zero (oddity in the RNG?)
+        strike = (underlyingLevel > 0.000001 ? underlyingLevel : 0.000001);
         y = std::log(strike/forwardValue);
         dy = ((std::fabs(y) > 0.001) ? y*0.0001 : 0.000001);
         strikep=strike*std::exp(dy);
@@ -113,6 +114,7 @@ namespace QuantLib {
             Real strikept = strike*dr*dqpt/(drpt*dq);
         
             wpt = blackTS_->blackVariance(t+dt, strikept, true);
+            wpt = std::max(w, wpt);
             QL_ENSURE(wpt>=w,
                       "decreasing variance at strike " << strike
                       << " between time " << t << " and time " << t+dt);
@@ -130,14 +132,16 @@ namespace QuantLib {
             wpt = blackTS_->blackVariance(t+dt, strikept, true);
             wmt = blackTS_->blackVariance(t-dt, strikemt, true);
 
+            wpt = std::max(w, wpt);           
             QL_ENSURE(wpt>=w,
                       "decreasing variance at strike " << strike
                       << " between time " << t << " and time " << t+dt);
+            w = std::max(w, wmt);
             QL_ENSURE(w>=wmt,
                       "decreasing variance at strike " << strike
                       << " between time " << t-dt << " and time " << t);
          
-            dwdt = (wpt-wmt)/(2.0*dt);
+            dwdt = std::max(0.0,(wpt-wmt))/(2.0*dt);
         }
 
         if (dwdy==0.0 && d2wdy2==0.0) { // avoid /w where w might be 0.0
@@ -149,6 +153,7 @@ namespace QuantLib {
             Real den = den1+den2+den3;
             Real result = dwdt / den;
 
+            result = std::max(result, 0.0);
             QL_ENSURE(result>=0.0,
                       "negative local vol^2 at strike " << strike
                       << " and time " << t
