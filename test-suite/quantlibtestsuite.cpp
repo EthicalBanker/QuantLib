@@ -56,6 +56,7 @@
 #include "array.hpp"
 #include "asianoptions.hpp"
 #include "assetswap.hpp"
+#include "autocall.hpp"
 #include "autocovariances.hpp"
 #include "barrieroption.hpp"
 #include "basketoption.hpp"
@@ -274,6 +275,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(ArrayTest::suite());
     test->add(AsianOptionTest::suite());
     test->add(AssetSwapTest::suite()); // fails with QL_USE_INDEXED_COUPON
+    test->add(AutocallTest::suite());
     test->add(AutocovariancesTest::suite());
     test->add(BarrierOptionTest::suite());
     test->add(BasketOptionTest::suite());

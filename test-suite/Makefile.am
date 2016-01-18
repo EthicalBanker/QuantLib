@@ -7,6 +7,7 @@ QL_TESTS = \
 	asianoptions.hpp asianoptions.cpp \
 	assetswap.hpp assetswap.cpp \
 	autocovariances.hpp autocovariances.cpp \
+	autocall.hpp autocall.cpp \
 	barrieroption.hpp barrieroption.cpp \
 	binaryoption.hpp binaryoption.cpp \
 	basketoption.hpp basketoption.cpp \
