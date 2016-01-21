@@ -1,8 +1,8 @@
 /* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*
- Copyright (C) 2014 Catley Lakeman Ltd. 
- The moral rights of the author, David Rees, have been asserted.
+ Copyright (C) 2014-6 Catley Lakeman Ltd. 
+ The moral rights of the author of the original version of this file, David Rees, have been asserted.
 
  This file is part of QuantLib, a free-software/open-source library
  for financial quantitative analysts and developers - http://quantlib.org/
@@ -32,76 +32,24 @@
 
 using namespace boost::unit_test_framework;
 
-// #define AUTOCALL_WRITE_OUTPUT
-
-namespace { 
-    void write_to_screen(
-        const std::string& method, 
-        const double autocall_NPV, 
-        const double error )
-    {
-        std::setprecision(10);
-        std::cout << method << "\n"
-                  << "npv    = " << autocall_NPV << "\n"
-                  << "error  = " << error << "\n";
-    }
-} // namespace
-
-#ifdef AUTOCALL_WRITE_OUTPUT
-
-#include <iostream>
-#include <fstream>
-
-namespace {
-    const static double cSamplePower = 15.0;
-
-    void autocall_boost_check( 
-        const std::string& method, 
-        const double autocall_NPV, 
-        const double target,
-        const double tolerance )
-    {
-        const static char cLogFilename[] = "c:\\temp\\quantlib_autocall.csv";
-
-        const double error = std::fabs( autocall_NPV - target );
-        write_to_screen( method, autocall_NPV, error );
-
-        std::ofstream file;
-        file.open( cLogFilename, std::ios::app );
-        file.precision(12);
-        file << method << ", "
-             << "NPV = " << autocall_NPV << ", "
-             << "Target = " << target << ","
-             << "Tolerance = " << tolerance << ","
-             << "Error = " << error
-             << std::endl;
-        file.close();
-    }
-} // namespace
-
-#else
-
 namespace {
     const static double cSamplePower = 10.0;
 
     void autocall_boost_check( 
         const std::string& method, 
         const double autocall_NPV, 
-        const double target,
+        const double expected,
         const double tolerance )
     {
-        const double error = std::fabs( autocall_NPV - target );
-        write_to_screen( method, autocall_NPV, error );
+        const double error = std::fabs( autocall_NPV - expected );
 
         if( error > tolerance)
-            BOOST_FAIL(std::setprecision(10)
-                        << "autocall NPV = " << autocall_NPV << "\n"
-                        << "target       = " << target << "\n"
-                        << "error        = " << error );
+            BOOST_ERROR(std::setprecision(16) << "\n" << method << " " \
+                        << "autocall NPV: " << autocall_NPV << "\n"
+                        << "expected:       = " << expected << "\n"
+                        << "error:        = " << error );
     }
 } // namespace
-
-#endif
 
 test_suite* AutocallTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("Autocall tests");
@@ -336,8 +284,8 @@ void AutocallTest::testExample() {
 
     // Calculate the net present value, and compare to a stored value
     const Real autocall_NPV = autocall.NPV();
-    const Real expectedResult = 391693.90375426225;
-    const Real tolerance = 1.0e-8;
+    const Real expectedResult = 391693.9037542623;
+    const Real tolerance = 1.0e-6;
 
     autocall_boost_check( "Test Example", autocall_NPV, expectedResult, tolerance );
 }
@@ -390,6 +338,7 @@ void AutocallTest::testBondStyle(
         break;
     }
 
+    Date originalEvaluationDate = Settings::instance().evaluationDate(); 
     Settings::instance().evaluationDate() = evaluationDate;
 
     // Create market data
@@ -416,7 +365,8 @@ void AutocallTest::testBondStyle(
 
     const Real autocall_NPV = bondStyleAutocall->NPV();
     const Real expectedResult = bond->NPV();
-
+    
+    Settings::instance().evaluationDate() = originalEvaluationDate;
     autocall_boost_check( method, autocall_NPV, expectedResult, tolerance );
 }
 
@@ -467,6 +417,7 @@ void AutocallTest::testNormal(
         break;
     }
 
+    Date originalEvaluationDate = Settings::instance().evaluationDate();
     Settings::instance().evaluationDate() = evaluationDate;
 
     // Create market data
@@ -490,6 +441,7 @@ void AutocallTest::testNormal(
 
     const Real autocall_NPV = normalAutocall->NPV();
     
+    Settings::instance().evaluationDate() = originalEvaluationDate;    
     autocall_boost_check( method, autocall_NPV, expectedResult, tolerance );
 }
 
@@ -924,14 +876,14 @@ void AutocallTest::createMarketDataRealistic(
     volatilitySurface->setInterpolation<Bicubic>();
     volatilitySurface->enableExtrapolation(true);
 
-    /* Realistic surface doesn't work for some reason
+    /* Realistic surface doesn't work for some reason */
     processes[0] = boost::shared_ptr<StochasticProcess1D>(
         new BlackScholesMertonProcess(
             Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(6802.92))),
             Handle<YieldTermStructure>(flatRate(evaluationDate, 0.035, dayCounter)),
             riskFreeRate,
             Handle<BlackVolTermStructure>(volatilitySurface)));
-    */
+    
 
     for( Size i=0 ; i<numUnderlyings ; ++i ) {
         processes[i] = boost::shared_ptr<StochasticProcess1D>(
@@ -964,6 +916,7 @@ void AutocallTest::testVsZeroStrikeCall()
     BOOST_TEST_MESSAGE( method );
 
     const Date today(1, July, 2014);
+    Date originalEvaluationDate = Settings::instance().evaluationDate();
     Settings::instance().evaluationDate() = today;
 
     // Create autocall
@@ -1068,7 +1021,8 @@ void AutocallTest::testVsZeroStrikeCall()
     const Real option_NPV = zeroStrikeCall.NPV();
     const Real expectedResult = option_NPV/spotPrices[0];
     const Real tolerance = 1.0e-2;
-
+   
+    Settings::instance().evaluationDate() = originalEvaluationDate;
     autocall_boost_check( method, autocall_NPV, expectedResult, tolerance );
 }
 
@@ -1080,6 +1034,7 @@ void AutocallTest::testVsCallOption() {
     BOOST_TEST_MESSAGE( method );
 
     const Date today(1, July, 2014);
+    Date originalEvaluationDate = Settings::instance().evaluationDate();
     Settings::instance().evaluationDate() = today;
 
     // Create autocall
@@ -1180,6 +1135,7 @@ void AutocallTest::testVsCallOption() {
     const Real expectedResult = option_NPV/spotPrices[0];
     const Real tolerance = 1.0e-2;
 
+    Settings::instance().evaluationDate() = originalEvaluationDate;
     autocall_boost_check( method, autocall_NPV, expectedResult, tolerance );
 }
 
@@ -1192,6 +1148,7 @@ void AutocallTest::testVsDigitalOption()
     BOOST_TEST_MESSAGE( method );
 
     const Date today(1, July, 2014);
+    Date originalEvaluationDate = Settings::instance().evaluationDate();
     Settings::instance().evaluationDate() = today;
 
     // Create autocall
@@ -1296,6 +1253,7 @@ void AutocallTest::testVsDigitalOption()
     const Real expectedResult = option_NPV/spotPrices[0];
     const Real tolerance = 1.0e-2;
 
+    Settings::instance().evaluationDate() = originalEvaluationDate;
     autocall_boost_check( method, autocall_NPV, expectedResult, tolerance );
 }
 
@@ -1308,6 +1266,7 @@ void AutocallTest::testVsCallSpread()
     BOOST_TEST_MESSAGE( method );
 
     const Date today(1, July, 2014);
+    Date originalEvaluationDate = Settings::instance().evaluationDate();
     Settings::instance().evaluationDate() = today;
 
     // Create autocall
@@ -1418,6 +1377,7 @@ void AutocallTest::testVsCallSpread()
     const Real expectedResult = 2.0 * (option100_NPV - option130_NPV)/spotPrices[0];
     const Real tolerance = 1.0e-2;
 
+    Settings::instance().evaluationDate() = originalEvaluationDate;
     autocall_boost_check( method, autocall_NPV, expectedResult, tolerance );
 }
 
@@ -1430,6 +1390,7 @@ void AutocallTest::testVsBarrierOption()
     BOOST_TEST_MESSAGE( method );
 
     const Date today(1, July, 2014);
+    Date originalEvaluationDate = Settings::instance().evaluationDate();
     Settings::instance().evaluationDate() = today;
 
     // Create autocall
@@ -1537,6 +1498,7 @@ void AutocallTest::testVsBarrierOption()
     const Real expectedResult = -barrierOption_NPV/spotPrices[0];
     const Real tolerance = 1.0e-4;
 
+    Settings::instance().evaluationDate() = originalEvaluationDate;
     autocall_boost_check( method, autocall_NPV, expectedResult, tolerance );
 }
 
@@ -1549,6 +1511,7 @@ void AutocallTest::testVsEverest()
     BOOST_TEST_MESSAGE( method );
     
     const Date today(1, July, 2014);
+    Date originalEvaluationDate = Settings::instance().evaluationDate();
     Settings::instance().evaluationDate() = today;
 
     // Create autocall
@@ -1642,5 +1605,6 @@ void AutocallTest::testVsEverest()
     const Real expectedResult = option_NPV;
     const Real tolerance = 1.0e-2;
  
+    Settings::instance().evaluationDate() = originalEvaluationDate;
     autocall_boost_check( method, autocall_NPV, expectedResult, tolerance );
 }
